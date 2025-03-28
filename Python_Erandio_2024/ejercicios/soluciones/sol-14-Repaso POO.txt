@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Esta es una posible solución al ejercicio de la Biblioteca
+"""
+
+
+from abc import ABC, abstractmethod
+
+# Para generar identificadores únicos
+import uuid
+
+class Documento(ABC):
+    def __init__(self, titulo, identificador = ""):
+        self.titulo = titulo
+        self.unidades = dict()
+        self.disponible = False
+        self.identificador = identificador
+
+    def __str__(self):
+        return f"{self.titulo}"
+    
+    def compra(self, unidades):
+        for unidad in range(unidades):
+            identificador = str(uuid.uuid1())
+            self.unidades[identificador] = False
+        print(f"Ahora tenemos {len(self.unidades.items())} unidades de {self}")
+        
+    def baja(self, cod_ejemplar):
+        del(self.unidades[cod_ejemplar])
+
+    def activa(self):
+        self.disponible = True
+        print(f"Activadas al préstamo {self.unidades} unidades de {self}")
+
+    def desactiva(self):
+        self.disponible = False
+        print(f"Desactivadas al préstamo {self.unidades} unidades de {self}")
+
+    def muestra_disponibles(self):
+        for clave, valor in self.unidades.items():
+            if not valor:
+                print(clave)
+
+    def muestra_alquilados(self):
+        for clave, valor in self.unidades.items():
+            if valor:
+                print(clave)
+    
+    
+    def alquila(self, fecha, cod_ejemplar = ""):
+        if not cod_ejemplar:
+            self.muestra_disponibles()
+            cod_ejemplar = input("Introduce el código del libro: ")
+        if cod_ejemplar in self.unidades.keys():
+            self.unidades[cod_ejemplar] = fecha
+            print(f"Se ha alquilado {self}")
+        else:
+            print("No se ha encontrado el código")
+            
+    @abstractmethod
+    def devuelve(self, fecha, cod_ejemplar = ""):
+        if not cod_ejemplar:
+            self.muestra_alquilados()
+            cod_ejemplar = input("Introduce el código del libro: ")
+        if cod_ejemplar in self.unidades.keys():
+            fecha_alquiler = self.unidades[cod_ejemplar]
+            self.unidades[cod_ejemplar] = False
+            coste = (fecha - fecha_alquiler).days
+            return coste
+            
+
+class Libro(Documento):
+    def __init__(self, titulo, autor):
+        super().__init__(titulo)
+        self.autor = autor
+        
+    def __str__(self):
+        return f"{self.titulo} escrito por {self.autor}"
+    
+    def devuelve(self, fecha, cod_ejemplar = ""):
+        coste = super().devuelve(self, fecha, cod_ejemplar)
+        return coste*0.5
+
+
+class Pelicula(Documento):
+    def __init__(self, titulo, director):
+        super().__init__(titulo)
+        self.director = director
+
+    def __str__(self):
+        return f"{self.titulo} dirigida por {self.director}"
+    
+    def devuelve(self, fecha, cod_ejemplar = ""):
+        coste = super().devuelve(self, fecha, cod_ejemplar)
+        return coste*0.75
+            
+
+class Revista(Documento):
+    prefijo = 10
+    def __init__(self, titulo, tematica):
+        super().__init__(titulo)
+        self.tematica = tematica
+
+    def __str__(self):
+        return f"{self.titulo}, revista de {self.tematica}"
+    
+    def devuelve(self, fecha, cod_ejemplar = ""):
+        coste = super().devuelve(self, fecha, cod_ejemplar)
+        return coste*1
+
+if __name__ == "__main__":
+    libro1 = Libro("El Quijote", "Miguel de Cervantes")
+    print(libro1)
+    revista1 = Revista("Muy Interesante", "Curiosidades")
+    print(revista1)
+    pelicula1 = Pelicula("Titanic", "James Cameron")
+    print(pelicula1)
+    
+    from datetime import date 
+
+    libro1.compra(3)
+    libro1.muestra_disponibles()
+    libro1.muestra_alquilados()
+    libro1.activa()
+    libro1.alquila(date(2024,9,15))
+    libro1.devuelve(date(2024,10,31))
+    libro1.desactiva()
+    libro1.activa()
+    libro1.alquila(2024,9,15)
+    libro1.alquila(2024,9,16)
